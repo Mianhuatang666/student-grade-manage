@@ -2,8 +2,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
-
-from schemas import Student, UpdateScore, UserRegister, UserLogin, TokenResponse
+from schemas import Student, UpdateScore, UserRegister, UserLogin, TokenResponse, StudentWithClassResponse,ClassResponse
 from auth import hash_password, verify_password, create_access_token, decode_access_token
 from services import calculate_stats
 from storage import (
@@ -13,7 +12,9 @@ from storage import (
     update_student_score,
     delete_student_by_name,
     get_user_by_username,
-    create_user
+    create_user,
+    get_students_with_class,
+    get_all_classes
 )
 
 
@@ -75,12 +76,13 @@ def add_student(student: Student, current_user = Depends(require_admin)):
     if old_student is not None:
         raise HTTPException(status_code=400, detail="学生已存在")
 
-    create_student(student.name, student.score)
+    create_student(student.name, student.score, student.class_id)
 
     return{
         "message": "添加成功",
         "name": student.name,
-        "score": student.score
+        "score": student.score,
+        "class_id": student.class_id
     }
 
 @app.post("/auth/register")
@@ -143,12 +145,6 @@ def delete_student(name: str, current_user=Depends(require_admin)):
     if row_count == 0:
         raise HTTPException(status_code=404, detail="学生不存在")
 
-    """
-    score = students[name]
-    del students[name]
-    save_students(students)
-    """
-
     return {
         "message": "删除成功",
         "name": name,
@@ -164,3 +160,11 @@ def get_stats():
         raise HTTPException(status_code=404, detail="暂无学生，无法统计")
 
     return stats
+
+@app.get("/students-with-class", response_model=list[StudentWithClassResponse])
+def read_students_with_class():
+    return get_students_with_class()
+
+@app.get("/classes", response_model=list[ClassResponse])
+def read_classes():
+    return get_all_classes()

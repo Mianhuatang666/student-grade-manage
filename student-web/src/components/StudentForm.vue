@@ -1,23 +1,26 @@
 <script setup lang="ts">
-import type { StudentInput } from "../types"
+import type { StudentInput, ClassItem } from "../types"
 import { ref } from "vue"
 
 const errorMessage = ref("")
 
 defineProps<{
   loading: boolean
+  classes: ClassItem[]
 }>()
 
-errorMessage.value = ""
 const emit = defineEmits<{
   "add-student": [student: StudentInput]
 }>()
 
 const newName = ref("")
 const newScore = ref("")
+const selectedClassId = ref("")
 
 
 function submitStudent() {
+  errorMessage.value = ""
+
   const score = Number(newScore.value)
 
   if(newName.value.trim() === ""){
@@ -42,11 +45,13 @@ function submitStudent() {
 
   emit("add-student", {
     name: newName.value,
-    score: score
+    score: score,
+    class_id: selectedClassId.value === "" ? null : Number(selectedClassId.value)
   })
 
   newName.value = ""
   newScore.value = ""
+  selectedClassId.value = ""
 }
 </script>
 
@@ -54,10 +59,19 @@ function submitStudent() {
   <div class="form">
     <input v-model="newName" placeholder="请输入姓名" />
     <input v-model="newScore" placeholder="请输入成绩" />
+    <select v-model="selectedClassId">
+      <option value="">请选择班级</option>
+      <option
+        v-for="classItem in classes"
+        :key="classItem.id"
+        :value="classItem.id"
+      >
+        {{ classItem.name }}
+      </option>
+    </select>
     <button :disabled="loading" @click="submitStudent">
       {{  loading ? "添加中..." : "添加学生" }}
     </button>
-
     <p v-if="errorMessage" class="error">{{  errorMessage  }}</p>
   </div>
 </template>

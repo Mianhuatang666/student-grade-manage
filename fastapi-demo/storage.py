@@ -1,56 +1,9 @@
 
-"""
-FILE_NAME = "students.txt"
-
-
-def load_students():
-    result = {}
-
-    try:
-        with open(FILE_NAME, "r", encoding="utf-8") as file:
-            for line in file:
-                line = line.strip()
-
-                if line == "":
-                    continue
-
-                name, score_text = line.split(",")
-                result[name] = int(score_text)
-    except FileNotFoundError:
-        pass
-
-    return result
-
-
-def save_students(students):
-    with open(FILE_NAME, "w", encoding="utf-8") as file:
-        for name, score in students.items():
-            file.write(f"{name},{score}\n")
-"""
-
-
-
-"""
-from sqlalchemy import text
-from database import engine
-"""
 from sqlalchemy import select
 from database import SessionLocal
-from models import StudentModel, UserModel
+from models import StudentModel, UserModel, ClassModel
 
 
-"""
-def get_all_students():
-    with engine.connect() as conn:
-        result = conn.execute(text("SELECT name, score FROM students"))
-
-        students = {}
-
-        for row in result:
-            students[row.name] = row.score
-
-        return students
-"""
 
 def get_all_students():
     with SessionLocal() as session:
@@ -65,24 +18,6 @@ def get_all_students():
 
         return students
 
-"""
-def get_student(name):
-    with engine.connect() as conn:
-        result = conn.execute(
-            text("SELECT name, score FROM students WHERE name =:name"),
-            {"name": name}
-        )
-
-        row = result.fetchone()
-
-        if row is None:
-            return None
-
-        return {
-            "name": row.name,
-            "score": row.score
-        }
-"""
 
 def get_student(name):
     with SessionLocal() as session:
@@ -97,24 +32,15 @@ def get_student(name):
             "name": student.name,
             "score": student.score
         }
-'''
-def create_student(name,score):
-    with engine.begin() as conn:
-        conn.execute(
-            text("INSERT INTO students (name,score) VALUES (:name, :score)"),
-            {
-                "name": name,
-                "score": score
-            }
-        )
-'''   
 
-def create_student(name,score):
+
+def create_student(name,score,class_id):
     with SessionLocal() as session:
-        student = StudentModel(name=name, score=score)
+        student = StudentModel(name=name, score=score, class_id=class_id)
 
         session.add(student)
         session.commit()
+
 
 def update_student_score(name, score):
     with SessionLocal() as session:
@@ -142,29 +68,9 @@ def delete_student_by_name(name):
         session.delete(student)
         session.commit()
 
+        return 1
 
-'''
-def update_student_score(name, score):
-    with engine.begin() as conn:
-        result = conn.execute(
-            text("UPDATE students SET score = :score WHERE name = :name"),
-            {
-                "name": name,
-                "score": score
-            }
-        )
 
-        return result.rowcount
-
-def delete_student_by_name(name):
-    with engine.begin() as conn:
-        result = conn.execute(
-            text("DELETE FROM students WHERE name = :name"),
-            {"name": name}
-        )
-
-        return result.rowcount
-'''
 
 def get_user_by_username(username):
     with SessionLocal() as session:
@@ -184,3 +90,46 @@ def create_user(username, password_hash):
 
         session.add(user)
         session.commit()
+
+def get_students_with_class():
+    db = SessionLocal()
+
+    try:
+        students = db.query(StudentModel).all()
+
+        result = []
+
+        for student in students:
+            class_name = None
+
+            if student.class_info is not None:
+                class_name = student.class_info.name
+
+            result.append({
+                "name": student.name,
+                "score": student.score,
+                "class_name": class_name
+            })
+        return result
+
+    finally:
+        db.close()
+
+def get_all_classes():
+    db = SessionLocal()
+
+    try:
+        classes = db.query(ClassModel).all()
+
+        result = []
+
+        for class_obj in classes:
+            result.append({
+                "id": class_obj.id,
+                "name": class_obj.name
+            })
+
+        return result
+
+    finally:
+        db.close()

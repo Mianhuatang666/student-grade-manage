@@ -1,22 +1,25 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue"
-import { StudentInput, StudentMap, Stats} from "../types"
+import { StudentInput, StudentWithClass, StudentMap, Stats, ClassItem} from "../types"
 import StudentForm from "../components/StudentForm.vue"
 import StudentList from "../components/StudentList.vue"
 import StatsPanel from "../components/StatsPanel.vue"
 import {
   fetchStudents,
+  fetchStudentsWithClass,
   createStudent,
   updateStudentScore,
   removeStudent,
-  fetchStats
+  fetchStats,
+  fetchClasses
 } from "../api/students"
 import { useAuthStore } from "../stores/authStore.js"
 import { getErrorMessage } from "../api/request"
 
-const students = ref<StudentMap>({})
+const students = ref<StudentWithClass[]>([])
 const message = ref("")
 const stats = ref<Stats | null>(null)
+const classes = ref<ClassItem[]>([])
 const addLoading =ref(false)
 const studentLoading = ref(false)
 const updateLoadingName = ref("")
@@ -27,7 +30,7 @@ const authStore = useAuthStore()
 async function loadStudents(){
   studentLoading.value = true
   try {
-    students.value = await fetchStudents()
+    students.value = await fetchStudentsWithClass()
   } catch (error) {
     message.value = "学生列表加载失败"
   } finally {
@@ -35,12 +38,23 @@ async function loadStudents(){
 }
 }
 
+async function loadClasses() {
+  const response = await fetchClasses()
+  const data = await response.json()
+
+  if(response.ok) {
+    classes.value = data
+  } else {
+    message.value = await getErrorMessage(response)
+  }
+}
+
 // 前端输入学生与成绩，后端添加，然后显示到界面
 async function addStudent(student: StudentInput) {
   addLoading.value = true
  
   try {
-    const response = await createStudent(student.name, student.score)
+    const response = await createStudent(student.name, student.score, student.class_id)
   
     if (response.ok) {
       message.value = "添加成功"
@@ -105,6 +119,7 @@ async function loadStats() {
 
 onMounted(() => {
   loadStudents()
+  loadClasses()
 })
 
 </script>
@@ -117,16 +132,24 @@ onMounted(() => {
         <StudentForm
           v-if="authStore.isAdmin()"
           :loading="addLoading"
+          :classes="classes"
           @add-student= "addStudent" 
         />
-
+        <div>
+          <h2>班级列表</h2>
+          <ul>
+            <li v-for="classItem in classes" :key="classItem.id">
+              {{ classItem.id }} - {{ classItem.name }}
+            </li>
+          </ul>
+        </div>
         <button @click="loadStudents">加载学生列表</button>
         
         <p>{{ message }}</p>
 
         <p v-if="studentLoading">学生列表加载中...</p>
 
-        <p v-else-if="Object.keys(students).length === 0">暂无学生</p>
+        <p v-else-if="students.length === 0">暂无学生</p>
 
         <StudentList
             :students="students"

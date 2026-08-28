@@ -1,4 +1,4 @@
-import type { StudentMap } from "../types"
+import type { StudentMap, StudentWithClass } from "../types"
 import { API_BASE, request } from "./request"
 
 export async function fetchStudents(): Promise<StudentMap> {
@@ -6,7 +6,7 @@ export async function fetchStudents(): Promise<StudentMap> {
   return response.json()
 }
 
-export async function createStudent(name: string, score: number): Promise<Response> {
+export async function createStudent(name: string, score: number, class_id?: number | null): Promise<Response> {
   return request("/students", {
     method: "POST",
     headers: {
@@ -14,7 +14,8 @@ export async function createStudent(name: string, score: number): Promise<Respon
     },
     body: JSON.stringify({
       name: name,
-      score: score
+      score: score,
+      class_id: class_id
     })
   })
 }
@@ -56,4 +57,13 @@ export async function login(username: string, password: string): Promise<Respons
     },
     body: formData
   })
+}
+
+export async function fetchClasses(): Promise<Response> {
+  return request("/classes")
+}
+
+export async function fetchStudentsWithClass(): Promise <StudentWithClass[]> {
+  const response = await request("/students-with-class")
+  return response.json()
 }

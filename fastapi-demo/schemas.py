@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, field_validator
 class Student(BaseModel):
     name: str = Field(min_length=1)
     score: int = Field(ge=0, le=100)
+    class_id: int | None = None
 
     @field_validator("name")
     @classmethod
@@ -50,3 +51,12 @@ class UserLogin(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
+
+class StudentWithClassResponse(BaseModel):
+    name: str
+    score: int
+    class_name: str | None
+
+class ClassResponse(BaseModel):
+    id: int
+    name: str

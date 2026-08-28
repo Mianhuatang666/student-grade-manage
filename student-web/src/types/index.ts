@@ -3,6 +3,7 @@ export type StudentMap = Record<string, number>
 export type StudentInput = {
     name: string
     score: number
+    class_id?:number | null
 }
 
 export type Stats = {
@@ -11,4 +12,15 @@ export type Stats = {
     max_student: string
     min_score: number
     min_student: string
+}
+
+export interface ClassItem {
+    id: number
+    name: string
+}
+
+export type StudentWithClass = {
+    name: string
+    score: number
+    class_name: string | null
 }
