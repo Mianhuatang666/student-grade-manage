@@ -21,10 +21,12 @@ app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
-    username = decode_access_token(token)
+    token_data = decode_access_token(token)
 
-    if username is None:
+    if token_data is None:
         raise HTTPException(status_code=401, detail="未登录或登录已过期")
+
+    username = token_data["username"]
 
     user = get_user_by_username(username)
 
@@ -32,6 +34,13 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="用户不存在")
 
     return user
+
+
+def require_admin(current_user = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="权限不足，只有管理员可以操作")
+
+    return current_user
 
 app.add_middleware(
     CORSMiddleware,
@@ -60,7 +69,7 @@ def get_student_api(name: str):
     return student
 
 @app.post("/students")
-def add_student(student: Student, current_user = Depends(get_current_user)):
+def add_student(student: Student, current_user = Depends(require_admin)):
     old_student = get_student(student.name)
 
     if old_student is not None:
@@ -100,7 +109,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=401, detail="用户名或密码错误")
 
     token = create_access_token({
-        "sub": db_user.username
+        "sub": db_user.username,
+        "role": db_user.role
     })
 
     return {
@@ -109,7 +119,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     }
 
 @app.put("/students/{name}")
-def update_student(name: str, data: UpdateScore, current_user = Depends(get_current_user)):
+def update_student(name: str, data: UpdateScore, current_user = Depends(require_admin)):
     row_count = update_student_score(name, data.score)
 
     if row_count == 0:
@@ -122,7 +132,7 @@ def update_student(name: str, data: UpdateScore, current_user = Depends(get_curr
     }
 
 @app.delete("/students/{name}")
-def delete_student(name: str, current_user=Depends(get_current_user)):
+def delete_student(name: str, current_user=Depends(require_admin)):
     old_student = get_student(name)
 
     if old_student is None:
