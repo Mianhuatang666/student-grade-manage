@@ -1,5 +1,6 @@
 import { defineStore } from "pinia"
 import { ref } from "vue"
+import { jwtDecode }from "jwt-decode"
 
 export const useAuthStore = defineStore("auth", () => {
   const token = ref(localStorage.getItem("token") || "")
@@ -18,10 +19,28 @@ export const useAuthStore = defineStore("auth", () => {
     return token.value !== ""
   }
 
+  function getRole() {
+    if(token.value === "") {
+      return ""
+    }
+
+    try {
+      const payload = jwtDecode(token.value)
+      return payload.role || ""
+    } catch {
+      return ""
+    }
+  }
+
+  function isAdmin() {
+    return getRole() === "admin"
+  }
   return {
     token,
     setToken,
     clearToken,
-    isLoggedIn
+    isLoggedIn,
+    getRole,
+    isAdmin
   }
 })

@@ -5,6 +5,7 @@ const props = defineProps<{
   students: StudentMap
   updateLoadingName: string
   deleteLoadingName: string
+  canEdit: boolean
 }>()
 
 const emit = defineEmits<{
@@ -46,24 +47,26 @@ function submitUpdate(name: string) {
     <li v-for="(score, name) in students" :key="name">
       {{ name }}: {{ score }}
 
-      <input
-        v-model="editScores[name]"
-        placeholder="新成绩"
-      />
+      <template v-if="canEdit">
+        <input
+          v-model="editScores[name]"
+          placeholder="新成绩"
+        />
 
-      <button 
-        :disabled="updateLoadingName === name"
-        @click="submitUpdate(name)"
-      >
-        {{  updateLoadingName === name ? "修改中" : "修改" }}
-      </button>
+        <button
+          :disabled="updateLoadingName === name"
+          @click="submitUpdate(name)"
+        >
+          {{ updateLoadingName === name ? "修改中" : "修改" }}
+        </button>
 
-      <button 
-        :disabled="deleteLoadingName === name"
-        @click="emit('delete-student', name)"
-      >
-        {{  deleteLoadingName === name ? "删除中" : "删除" }}
-      </button>
+        <button
+          :disabled="deleteLoadingName === name"
+          @click="emit('delete-student', name)"
+        >
+          {{ deleteLoadingName === name ? "删除中" : "删除" }}
+        </button>
+      </template>
     </li>
   </ul>
 </template>

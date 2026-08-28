@@ -11,7 +11,7 @@ import {
   removeStudent,
   fetchStats
 } from "../api/students"
-
+import { useAuthStore } from "../stores/authStore.js"
 
 const students = ref<StudentMap>({})
 const message = ref("")
@@ -20,6 +20,7 @@ const addLoading =ref(false)
 const studentLoading = ref(false)
 const updateLoadingName = ref("")
 const deleteLoadingName = ref("")
+const authStore = useAuthStore()
 
 // 从后端获取所有学生，并显示到界面
 async function loadStudents(){
@@ -128,6 +129,7 @@ onMounted(() => {
         <h1>学生成绩管理系统</h1> 
 
         <StudentForm
+          v-if="authStore.isAdmin()"
           :loading="addLoading"
           @add-student= "addStudent" 
         />
@@ -144,6 +146,7 @@ onMounted(() => {
             :students="students"
             :update-loading-name="updateLoadingName"
             :delete-loading-name="deleteLoadingName"
+            :can-edit="authStore.isAdmin()"
             @update-student="updateStudent"
             @delete-student="deleteStudent"
         />
