@@ -1,0 +1,12 @@
+.env
+*.local
+__pycache__/
+.pytest_cache/
+.venv/
+*.pyc
+students.txt
+check_*.py
+node_modules/
+dist/
+dist-ssr/
+*.log
