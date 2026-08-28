@@ -1,163 +1,100 @@
-# 学生成绩管理系统前端
+# student-web
 
-本项目是学生成绩管理系统的前端部分，基于 Vue3 和 Vite 开发，实现学生成绩展示、新增、修改、删除、统计展示、用户登录、路由守卫和登录状态管理等功能。前端通过 HTTP API 与 FastAPI 后端交互。
+学生成绩管理系统前端项目，基于 Vue 3 + TypeScript + Vite 开发。
+
+完整项目说明请查看根目录 `README.md`。
 
 ## 技术栈
 
-- Vue3
-- Vite
+- Vue 3
 - TypeScript
+- Vite
 - Vue Router
 - Pinia
 - Fetch API
-- HTML / CSS
-- Git
+- jwt-decode
 
-## 功能列表
+## 主要功能
 
-- 首页展示
-- 用户登录
-- 退出登录
+- 用户登录与退出登录
 - 登录状态保存
-- 路由守卫保护学生管理页
-- 学生列表自动加载
-- 新增学生成绩
-- 修改学生成绩
-- 删除学生
+- 路由守卫
+- 学生列表展示
+- 学生成绩新增、修改、删除
 - 成绩统计展示
-- 请求 loading 状态
-- 表单错误提示
-- token 失效后自动跳转登录页
+- 根据角色控制操作按钮显示
+- 统一请求封装
+- 统一错误提示
+- loading 状态与防重复提交
 
-## 项目结构
+## 环境变量
 
-```text
-student-web
-├── src
-│   ├── api
-│   │   ├── request.js        # 统一请求封装，自动携带 token，统一处理 401
-│   │   └── students.ts       # 学生、统计、登录相关接口
-│   ├── components
-│   │   ├── StudentForm.vue   # 学生新增表单
-│   │   ├── StudentList.vue   # 学生列表、修改、删除
-│   │   └── StatsPanel.vue    # 成绩统计展示
-│   ├── router
-│   │   └── index.js          # 页面路由和登录守卫
-│   ├── stores
-│   │   └── authStore.js      # Pinia 登录状态管理
-│   ├── types
-│   │   └── index.ts          # TypeScript 类型定义
-│   ├── views
-│   │   ├── HomeView.vue      # 首页
-│   │   ├── LoginView.vue     # 登录页
-│   │   └── StudentView.vue   # 学生管理页
-│   ├── App.vue
-│   └── main.js
-├── package.json
-└── README.md
-```
-
-## 安装依赖
+复制 `.env.example` 为 `.env`：
 
 ```powershell
-cd E:\vscodeprogram\student-web
-npm install
+copy .env.example .env
 ```
 
-## 启动前端
-
-```powershell
-npm run dev
-```
-
-启动后访问：
-
-```text
-http://localhost:5173
-```
-
-## 后端依赖
-
-前端需要配合 FastAPI 后端运行。
-
-后端地址默认配置为：
-
-```text
-http://127.0.0.1:8000
-```
-
-如需修改后端地址，可以复制 `.env.example` 为 `.env`，并修改：
+配置后端接口地址：
 
 ```env
 VITE_API_BASE=http://127.0.0.1:8000
 ```
 
-启动后端：
+说明：
+
+- Vite 前端环境变量必须以 `VITE_` 开头
+- `VITE_API_BASE` 表示后端 FastAPI 服务地址
+
+## 安装依赖
+
+进入前端目录：
 
 ```powershell
-cd E:\vscodeprogram\fastapi-demo
-uvicorn main:app --reload
+cd E:\vscodeprogram\student-management-system\student-web
 ```
 
-## 登录与鉴权流程
+安装依赖：
 
-用户在登录页输入账号密码后，前端调用后端 `/auth/login` 接口。登录成功后，后端返回 JWT token，前端通过 Pinia 的 `authStore` 保存 token，并同步存入 `localStorage`。
+```powershell
+npm install
+```
 
-访问新增、修改、删除学生等受保护接口时，前端会在请求头中自动携带：
+## 启动开发服务
+
+```powershell
+npm run dev
+```
+
+默认访问地址：
 
 ```text
-Authorization: Bearer <token>
+http://localhost:5173
 ```
 
-如果后端返回 `401 Unauthorized`，统一请求函数会自动清空 token，并跳转到登录页。
-
-## 状态管理
-
-项目使用 Pinia 管理登录状态。
-
-`authStore` 主要负责：
-
-- 保存 token
-- 清空 token
-- 判断是否已登录
-- 从 localStorage 恢复登录状态
-
-## 请求封装
-
-项目通过 `api/request.js` 统一封装请求逻辑：
-
-- 自动携带 Authorization token
-- 统一处理 401 登录失效
-- 减少重复代码
-
-## 页面交互优化
-
-项目实现了基础的用户体验优化：
-
-- 添加学生时显示添加中状态
-- 加载学生列表时显示加载中状态
-- 修改、删除时只禁用当前操作的学生按钮
-- 表单错误使用页面提示，不使用浏览器弹窗
-- 请求失败时显示错误信息
-
-## 构建项目
+## 生产打包
 
 ```powershell
 npm run build
 ```
 
-构建成功后会生成：
+打包产物会生成到：
 
 ```text
-dist
+dist/
 ```
 
-## 项目亮点
+## 预览打包结果
 
-- 使用 Vue3 Composition API 组织页面逻辑
-- 使用组件拆分实现表单、列表、统计模块复用
-- 使用 props 和 emit 实现父子组件通信
-- 使用 Vue Router 实现页面切换和登录守卫
-- 使用 Pinia 统一管理登录状态
-- 使用统一请求封装处理 token 和 401 错误
-- 与 FastAPI 后端完成前后端分离联调
+```powershell
+npm run preview
+```
+
+## 依赖后端服务
+
+前端运行前，需要先启动后端 FastAPI 服务：
+
+```text
+http://127.0.0.1:8000
+```
+
