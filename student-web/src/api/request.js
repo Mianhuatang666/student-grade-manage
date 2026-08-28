@@ -26,3 +26,21 @@ export async function request(path, options = {}) {
 
   return response
 }
+
+export async function getErrorMessage(response) {
+  try {
+    const data = await response.json()
+
+    if (typeof data.detail === "string") {
+      return data.detail
+    }
+
+    if (Array.isArray(data.detail)) {
+      return data.detail[0]?.msg || "请求参数错误"
+    }
+
+    return "请求失败"
+  } catch {
+    return "请求失败"
+  }
+}

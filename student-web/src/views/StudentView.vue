@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, resolveComponent } from "vue"
+import { ref, onMounted } from "vue"
 import { StudentInput, StudentMap, Stats} from "../types"
 import StudentForm from "../components/StudentForm.vue"
 import StudentList from "../components/StudentList.vue"
@@ -12,6 +12,7 @@ import {
   fetchStats
 } from "../api/students"
 import { useAuthStore } from "../stores/authStore.js"
+import { getErrorMessage } from "../api/request"
 
 const students = ref<StudentMap>({})
 const message = ref("")
@@ -34,18 +35,6 @@ async function loadStudents(){
 }
 }
 
-function getErrorMessage(detail: unknown) {
-  if (detail === "Not authenticated") {
-    return "请先登录"
-  }
-
-  if (typeof detail === "string") {
-    return detail
-  }
-
-  return "请求失败"
-}
-
 // 前端输入学生与成绩，后端添加，然后显示到界面
 async function addStudent(student: StudentInput) {
   addLoading.value = true
@@ -58,8 +47,7 @@ async function addStudent(student: StudentInput) {
       await loadStudents()
       await loadStats()
     } else {
-     const data = await response.json()
-      message.value = data.detail || "添加失败"
+      message.value = await getErrorMessage(response)
     }
   } finally {
     addLoading.value = false
@@ -76,8 +64,7 @@ async function deleteStudent(name: string) {
       await loadStudents()
       await loadStats()
     } else {
-      const data = await response.json()
-      message.value = data.detail || "删除失败"
+      message.value = await getErrorMessage(response)
     }
   } finally {
     deleteLoadingName.value = ""
@@ -95,8 +82,7 @@ async function updateStudent(student: StudentInput) {
       await loadStudents()
       await loadStats()
     } else {
-      const data = await response.json()
-      message.value = data.detail || "修改失败"
+      message.value = await getErrorMessage(response)
     }
   } finally {
     updateLoadingName.value = ""
@@ -106,14 +92,14 @@ async function updateStudent(student: StudentInput) {
 //统计学生数据
 async function loadStats() {
   const response = await fetchStats()
-  const data = await response.json()
 
   if (response.ok) {
+    const data = await response.json()
     stats.value = data
     message.value = "统计加载成功"
   } else {
     stats.value = null
-    message.value = getErrorMessage(data.detail)
+    message.value = await getErrorMessage(response)
   }
 }
 
