@@ -67,7 +67,9 @@ export async function fetchStudentsWithClass(
   classId?: number,
   keyword?: string,
   page: number = 1,
-  pageSize: number = 10
+  pageSize: number = 10,
+  sortBy: string = "id",
+  sortOrder: string = "asc"
 ): Promise <StudentPage> {
   const params = new URLSearchParams()
 
@@ -81,6 +83,8 @@ export async function fetchStudentsWithClass(
 
   params.append("page", String(page))
   params.append("page_size", String(pageSize))
+  params.append("sort_by", sortBy)
+  params.append("sort_order", sortOrder)
 
   const queryString = params.toString()
 

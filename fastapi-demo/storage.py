@@ -91,7 +91,7 @@ def create_user(username, password_hash):
         session.add(user)
         session.commit()
 
-def get_students_with_class(class_id=None, keyword=None, page=1, page_size=10):
+def get_students_with_class(class_id=None, keyword=None, page=1, page_size=10, sort_by="id", sort_order="asc"):
     db = SessionLocal()
 
     try:
@@ -104,7 +104,19 @@ def get_students_with_class(class_id=None, keyword=None, page=1, page_size=10):
             query = query.filter(StudentModel.name.like(f"%{keyword}%"))
 
         total = query.count()
+        sort_columns = {
+            "id": StudentModel.id,
+            "name": StudentModel.name,
+            "score": StudentModel.score,
+            "class_id": StudentModel.class_id
+        }
 
+        sort_columns = sort_columns.get(sort_by, StudentModel.id)
+
+        if sort_order == "desc":
+            query = query.order_by(sort_columns.desc())
+        else:
+            query = query.order_by(sort_columns.asc())
         offset = (page - 1) * page_size
         
         students = query.offset(offset).limit(page_size).all()

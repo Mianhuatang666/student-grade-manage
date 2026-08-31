@@ -166,9 +166,11 @@ def read_students_with_class(
     class_id: int | None = None,
     keyword: str | None = None,
     page: int = 1,
-    page_size: int = 10
+    page_size: int = 10,
+    sort_by: str = "id",
+    sort_order: str = "asc"
 ):
-    return get_students_with_class(class_id, keyword, page, page_size)
+    return get_students_with_class(class_id, keyword, page, page_size, sort_by, sort_order)
 
 @app.get("/classes", response_model=list[ClassResponse])
 def read_classes():

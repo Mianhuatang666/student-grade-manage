@@ -29,6 +29,8 @@ const page = ref(1)
 const pageSize = ref(5)
 const authStore = useAuthStore()
 const keyword = ref("")
+const sortBy = ref("id")
+const sortOrder = ref("asc")
 const total = ref(0)
 
 const totalPages = computed(() => {
@@ -45,7 +47,9 @@ async function loadStudents() {
     classId, 
     keyword.value,
     page.value,
-    pageSize.value)
+    pageSize.value,
+    sortBy.value,
+    sortOrder.value)
 
   students.value = data.items
   total.value = data.total
@@ -185,7 +189,17 @@ onMounted(() => {
             v-model="keyword"
             placeholder="请输入学生姓名"
           />
-          
+          <select v-model="sortBy">
+            <option value="id">默认排序</option>
+            <option value="name">按姓名</option>
+            <option value="score">按成绩</option>
+            <option value="class_id">按班级</option>
+          </select>
+
+          <select v-model="sortOrder">
+            <option value="asc">升序</option>
+            <option value="desc">降序</option>
+          </select>
           <button @click="searchStudents">查询</button>
         </div>
         <p>{{ message }}</p>
