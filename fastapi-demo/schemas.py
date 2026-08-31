@@ -60,3 +60,9 @@ class StudentWithClassResponse(BaseModel):
 class ClassResponse(BaseModel):
     id: int
     name: str
+
+class StudentPage(BaseModel):
+    items: list[StudentWithClassResponse]
+    total: int
+    page: int
+    page_size: int

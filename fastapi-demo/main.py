@@ -2,7 +2,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
-from schemas import Student, UpdateScore, UserRegister, UserLogin, TokenResponse, StudentWithClassResponse,ClassResponse
+from schemas import Student, StudentPage, UpdateScore, UserRegister, UserLogin, TokenResponse, StudentWithClassResponse,ClassResponse
 from auth import hash_password, verify_password, create_access_token, decode_access_token
 from services import calculate_stats
 from storage import (
@@ -161,9 +161,14 @@ def get_stats():
 
     return stats
 
-@app.get("/students-with-class", response_model=list[StudentWithClassResponse])
-def read_students_with_class():
-    return get_students_with_class()
+@app.get("/students-with-class", response_model=StudentPage)
+def read_students_with_class(
+    class_id: int | None = None,
+    keyword: str | None = None,
+    page: int = 1,
+    page_size: int = 10
+):
+    return get_students_with_class(class_id, keyword, page, page_size)
 
 @app.get("/classes", response_model=list[ClassResponse])
 def read_classes():

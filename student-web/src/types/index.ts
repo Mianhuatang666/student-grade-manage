@@ -24,3 +24,10 @@ export type StudentWithClass = {
     score: number
     class_name: string | null
 }
+
+export interface StudentPage {
+    items: StudentWithClass[]
+    total: number
+    page: number
+    page_size: number
+}

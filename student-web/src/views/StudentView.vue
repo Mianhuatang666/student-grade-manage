@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue"
+import { ref, onMounted, computed } from "vue"
 import { StudentInput, StudentWithClass, StudentMap, Stats, ClassItem} from "../types"
 import StudentForm from "../components/StudentForm.vue"
 import StudentList from "../components/StudentList.vue"
@@ -24,18 +24,47 @@ const addLoading =ref(false)
 const studentLoading = ref(false)
 const updateLoadingName = ref("")
 const deleteLoadingName = ref("")
+const selectedClassId = ref("")
+const page = ref(1)
+const pageSize = ref(5)
 const authStore = useAuthStore()
+const keyword = ref("")
+const total = ref(0)
+
+const totalPages = computed(() => {
+  return Math.ceil(total.value / pageSize.value)
+})
 
 // 从后端获取所有学生，并显示到界面
-async function loadStudents(){
-  studentLoading.value = true
-  try {
-    students.value = await fetchStudentsWithClass()
-  } catch (error) {
-    message.value = "学生列表加载失败"
-  } finally {
-    studentLoading.value = false
+async function loadStudents() {
+  const classId = selectedClassId.value === ""
+    ? undefined
+    : Number(selectedClassId.value)
+  
+  const data = await fetchStudentsWithClass(
+    classId, 
+    keyword.value,
+    page.value,
+    pageSize.value)
+
+  students.value = data.items
+  total.value = data.total
+  message.value = "学生列表加载成功"
 }
+
+async function prevPage() {
+  if(page.value <= 1) {
+    return
+  }
+
+  page.value -= 1
+  await loadStudents()
+  
+}
+
+async function nextPage() {
+  page.value += 1
+  await loadStudents()
 }
 
 async function loadClasses() {
@@ -117,6 +146,10 @@ async function loadStats() {
   }
 }
 
+async function searchStudents() {
+  page.value = 1
+  await loadStudents()
+}
 onMounted(() => {
   loadStudents()
   loadClasses()
@@ -136,15 +169,25 @@ onMounted(() => {
           @add-student= "addStudent" 
         />
         <div>
-          <h2>班级列表</h2>
-          <ul>
-            <li v-for="classItem in classes" :key="classItem.id">
-              {{ classItem.id }} - {{ classItem.name }}
-            </li>
-          </ul>
+          <label>按班级筛选：</label>
+
+          <select v-model="selectedClassId">
+            <option value="">全部班级</option>
+            <option
+              v-for="classItem in classes"
+              :key="classItem.id"
+              :value="classItem.id"
+            >
+              {{ classItem.name }}
+            </option>
+          </select>
+          <input
+            v-model="keyword"
+            placeholder="请输入学生姓名"
+          />
+          
+          <button @click="searchStudents">查询</button>
         </div>
-        <button @click="loadStudents">加载学生列表</button>
-        
         <p>{{ message }}</p>
 
         <p v-if="studentLoading">学生列表加载中...</p>
@@ -159,6 +202,14 @@ onMounted(() => {
             @update-student="updateStudent"
             @delete-student="deleteStudent"
         />
+        <div>
+          <button :disabled="page <= 1" @click="prevPage">上一页</button>
+
+          <span>当前第 {{ page }} / {{ totalPages }} 页,共 {{  total }} 条
+          </span>
+
+          <button :disabled="page >= totalPages" @click="nextPage">下一页</button>
+        </div>
 
         <StatsPanel :stats="stats" @load-stats="loadStats" />
     </div>

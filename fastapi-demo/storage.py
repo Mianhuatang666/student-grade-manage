@@ -91,11 +91,23 @@ def create_user(username, password_hash):
         session.add(user)
         session.commit()
 
-def get_students_with_class():
+def get_students_with_class(class_id=None, keyword=None, page=1, page_size=10):
     db = SessionLocal()
 
     try:
-        students = db.query(StudentModel).all()
+        query = db.query(StudentModel)
+
+        if class_id is not None:
+            query = query.filter(StudentModel.class_id == class_id)
+
+        if keyword is not None and keyword.strip() !="":
+            query = query.filter(StudentModel.name.like(f"%{keyword}%"))
+
+        total = query.count()
+
+        offset = (page - 1) * page_size
+        
+        students = query.offset(offset).limit(page_size).all()
 
         result = []
 
@@ -108,10 +120,15 @@ def get_students_with_class():
             result.append({
                 "name": student.name,
                 "score": student.score,
-                "class_name": class_name
+                "class_name": class_name,
             })
-        return result
 
+        return {
+            "items": result,
+            "total": total,
+            "page": page,
+            "page_size": page_size
+        }
     finally:
         db.close()
 
