@@ -1,5 +1,5 @@
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from schemas import Student, StudentPage, UpdateScore, UserRegister, UserLogin, TokenResponse, StudentWithClassResponse,ClassResponse
@@ -122,33 +122,25 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 @app.put("/students/{name}")
 def update_student(name: str, data: UpdateScore, current_user = Depends(require_admin)):
-    row_count = update_student_score(name, data.score)
+    success = update_student_score(name, data.score)
 
-    if row_count == 0:
+    if not success:
         raise HTTPException(status_code=404, detail="学生不存在")
 
     return {
-        "message": "修改成功",
-        "name": name,
-        "score": data.score
+        "message": "修改成功"
     }
 
 @app.delete("/students/{name}")
 def delete_student(name: str, current_user=Depends(require_admin)):
-    old_student = get_student(name)
 
-    if old_student is None:
-        raise HTTPException(status_code=404, detail="学生不存在")
+    success = delete_student_by_name(name)
 
-    row_count = delete_student_by_name(name)
-
-    if row_count == 0:
+    if not success:
         raise HTTPException(status_code=404, detail="学生不存在")
 
     return {
-        "message": "删除成功",
-        "name": name,
-        "score": old_student["score"]
+        "message": "删除成功"
     }
 
 @app.get("/stats")
@@ -165,10 +157,10 @@ def get_stats():
 def read_students_with_class(
     class_id: int | None = None,
     keyword: str | None = None,
-    page: int = 1,
-    page_size: int = 10,
-    sort_by: str = "id",
-    sort_order: str = "asc"
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    sort_by: str = Query("id", pattern="^(id|name|score)$"),
+    sort_order: str = Query("asc", pattern="^(asc|desc)$")
 ):
     return get_students_with_class(class_id, keyword, page, page_size, sort_by, sort_order)
 

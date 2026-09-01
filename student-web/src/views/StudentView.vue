@@ -15,6 +15,7 @@ import {
 } from "../api/students"
 import { useAuthStore } from "../stores/authStore.js"
 import { getErrorMessage } from "../api/request"
+import { RefSymbol } from "@vue/reactivity"
 
 const students = ref<StudentWithClass[]>([])
 const message = ref("")
@@ -39,21 +40,31 @@ const totalPages = computed(() => {
 
 // 从后端获取所有学生，并显示到界面
 async function loadStudents() {
-  const classId = selectedClassId.value === ""
-    ? undefined
-    : Number(selectedClassId.value)
-  
-  const data = await fetchStudentsWithClass(
-    classId, 
-    keyword.value,
-    page.value,
-    pageSize.value,
-    sortBy.value,
-    sortOrder.value)
+  studentLoading.value = true
 
-  students.value = data.items
-  total.value = data.total
-  message.value = "学生列表加载成功"
+  try {
+    const classId = selectedClassId.value === ""
+      ? undefined
+      : Number(selectedClassId.value)
+    
+    const data = await fetchStudentsWithClass(
+      classId, 
+      keyword.value,
+      page.value,
+      pageSize.value,
+      sortBy.value,
+      sortOrder.value)
+
+    students.value = data.items
+    total.value = data.total
+    message.value = "学生列表加载成功"
+  } catch (error) {
+    message.value = error instanceof Error
+      ? error.message
+      : "学生列表加载失败"
+  } finally {
+    studentLoading.value = false
+  }
 }
 
 async function prevPage() {
@@ -96,6 +107,10 @@ async function addStudent(student: StudentInput) {
     } else {
       message.value = await getErrorMessage(response)
     }
+  } catch (error) {
+    message.value = error instanceof Error
+      ? error.message
+      : "添加失败"
   } finally {
     addLoading.value = false
   }
@@ -113,7 +128,11 @@ async function deleteStudent(name: string) {
     } else {
       message.value = await getErrorMessage(response)
     }
-  } finally {
+  } catch (error) {
+    message.value = error instanceof Error
+      ? error.message
+      : "删除失败"
+  }finally {
     deleteLoadingName.value = ""
   }
 }
@@ -131,7 +150,11 @@ async function updateStudent(student: StudentInput) {
     } else {
       message.value = await getErrorMessage(response)
     }
-  } finally {
+  } catch (error) {
+    message.value = error instanceof Error
+      ? error.message
+      : "修改失败"
+  }finally {
     updateLoadingName.value = ""
   }
 }

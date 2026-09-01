@@ -14,10 +14,15 @@ export async function request(path, options = {}) {
     headers.Authorization = `Bearer ${authStore.token}`
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers
-  })
+  let response
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers
+    })
+  } catch {
+    throw new Error("请求失败，请确认后端服务已启动")
+  }
 
   if (response.status === 401) {
     authStore.clearToken()
@@ -28,6 +33,18 @@ export async function request(path, options = {}) {
 }
 
 export async function getErrorMessage(response) {
+  if (response.status === 401) {
+    return "登录已失效，请重新登录"
+  }
+
+  if (response.status === 403) {
+    return "权限不足，无法执行该操作"
+  }
+
+  if (response.status === 500) {
+    return "服务器错误，请稍后重试"
+  }
+
   try {
     const data = await response.json()
 
